@@ -6,15 +6,15 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-setup(name='zohocrm-python',
+setup(name='zoho-python',
       version='0.1.5',
-      description='API wrapper for ZohoCRM written in Python',
+      description='API wrapper for Zoho APIs written in Python',
       long_description=read('README.md'),
-      url='https://github.com/GearPlug/zohocrm-python',
-      author='Nerio Rincon',
-      author_email='nrincon.mr@gmail.com',
+      url='https://github.com/cortop/zoho-python',
+      author='@cortop',
+      author_email='cortop@gmail.com',
       license='GPL',
-      packages=['zohocrm'],
+      packages=['zoho'],
       install_requires=[
           'requests',
       ],

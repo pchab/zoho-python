@@ -1,14 +1,8 @@
-import json
-import requests
+# coding: utf8
 from urllib.parse import urlencode
+from zoho.common.client import Client as CommonClient
 
-from zohocrm.exceptions import UnknownError, InvalidModuleError, NoPermissionError, MandatoryKeyNotFoundError, \
-    InvalidDataError, MandatoryFieldNotFoundError
 
-BASE_URL = 'https://www.zohoapis.com/crm/v2/'
-ZOHOCRM_AUTHORIZE_URL = 'https://accounts.zoho.com/oauth/v2/auth'
-ZOHOCRM_REQUEST_TOKEN_URL = 'https://accounts.zoho.com/oauth/v2/token'
-ZOHOCRM_REFRESH_TOKEN_URL = "https://accounts.zoho.com/oauth/v2/token"
 READ_MODULE_LIST = ['leads', 'accounts', 'contacts', 'deals', 'campaigns', 'tasks', 'cases', 'events', 'calls',
                     'solutions', 'products', 'vendors', 'pricebooks', 'quotes', 'salesorders', 'purchaseorders',
                     'invoices', 'custom', 'notes', 'approvals', 'dashboards', 'search', 'activities']
@@ -18,69 +12,15 @@ WRITE_MODULE_LIST = ['leads', 'accounts', 'contacts', 'deals', 'campaigns', 'tas
                      'solutions', 'products', 'vendors', 'pricebooks', 'purchaseorders', 'custom', 'notes']
 
 
-class Client(object):
-
-    def __init__(self, client_id, client_secret, redirect_uri, scope, access_type, refresh_token=None):
-        self.code = None
-        self.scope = scope
-        self.access_type = access_type
-        self.client_id = client_id
-        self._refresh_token = refresh_token
-        self.redirect_uri = redirect_uri
-        self.client_secret = client_secret
-        self.access_token = None
-
-    def get_authorization_url(self):
-        """
-
-        :return:
-        """
-        params = {'scope': ','.join(self.scope), 'client_id': self.client_id, 'access_type': 'offline',
-                  'redirect_uri': self.redirect_uri, 'response_type': 'code', 'prompt':'consent'}
-        url = ZOHOCRM_AUTHORIZE_URL + '?' + urlencode(params)
-        return url
-
-    def exchange_code(self, code):
-        """
-
-        :param code:
-        :return:
-        """
-        params = {'code': code, 'client_id': self.client_id, 'client_secret': self.client_secret,
-                  'redirect_uri': self.redirect_uri, 'grant_type': 'authorization_code'}
-        url = ZOHOCRM_REQUEST_TOKEN_URL + '?' + urlencode(params)
-        return self._post(url)
-
-    def refresh_token(self):
-        """
-
-        :return:
-        """
-        params = {'refresh_token': self._refresh_token, 'client_id': self.client_id,
-                  'client_secret': self.client_secret, 'grant_type': 'refresh_token'}
-        url = ZOHOCRM_REFRESH_TOKEN_URL + '?' + urlencode(params)
-        response = self._post(url)
-        return response
-
-    def set_access_token(self, token):
-        """
-
-        :param token:
-        :return:
-        """
-        if isinstance(token, dict):
-            self.access_token = token['access_token']
-            if 'refresh_token' in token:
-                self._refresh_token = token['refresh_token']
-        else:
-            self.access_token = token
+class Client(CommonClient):
+    BASE_URL = 'https://www.zohoapis.com/crm/v2/'
 
     def get_module_list(self):
         """
 
         :return:
         """
-        url = BASE_URL + "settings/modules"
+        url = self.BASE_URL + "settings/modules"
         response = self._get(url)
         if response:
             return [i for i in response['modules'] if i['api_supported'] is True]
@@ -94,7 +34,7 @@ class Client(object):
         :return:
         """
         params = {'module': module}
-        url = BASE_URL + "settings/fields" + "?" + urlencode(params)
+        url = self.BASE_URL + "settings/fields" + "?" + urlencode(params)
         response = self._get(url)
         if response:
             try:
@@ -128,7 +68,7 @@ class Client(object):
         event = ["{0}.create".format(module)]
         data = [{'notify_url': notify_url, 'channel_id': gearplug_webhook_id, 'events': event, }]
         data = {'watch': data}
-        url = BASE_URL + endpoint
+        url = self.BASE_URL + endpoint
         try:
             response = self._post(url, data=data)
         except Exception as e:
@@ -147,7 +87,7 @@ class Client(object):
         data = [{'channel_id': webhook_id, 'events': events, '_delete_events': 'true'}]
         data = {'watch': data}
         endpoint = 'actions/watch'
-        url = BASE_URL + endpoint
+        url = self.BASE_URL + endpoint
         response = self._patch(url, data=data)
         if response['watch'][-1]['code'] == "SUCCESS":
             return response['watch'][-1]['details']
@@ -162,7 +102,7 @@ class Client(object):
         """
         if module_name not in READ_MODULE_LIST:
             return None
-        url = BASE_URL + str(module_name)
+        url = self.BASE_URL + str(module_name)
         response = self._get(url)
         all_data = [response['data']]
         while response['info']['more_records'] == 'true':
@@ -177,7 +117,7 @@ class Client(object):
         :return:
         """
         endpoint = '{0}/{1}'.format(module, id)
-        url = BASE_URL + str(endpoint)
+        url = self.BASE_URL + str(endpoint)
         response = self._get(url)
         if response and 'data' in response and len(response['data']) > 0 and response['data'][0]['id'] == id:
             return response['data']
@@ -190,7 +130,7 @@ class Client(object):
         :return: all active users
         """
         endpoint = 'users?type=ActiveUsers'
-        url = BASE_URL + str(endpoint)
+        url = self.BASE_URL + str(endpoint)
         response = self._get(url)
         if response and 'users' in response and isinstance(response['users'], list) and len(response['users']) > 0:
             return response['users']
@@ -203,7 +143,7 @@ class Client(object):
         :return: all oganizations
         """
         endpoint = 'org'
-        url = BASE_URL + str(endpoint)
+        url = self.BASE_URL + str(endpoint)
         response = self._get(url)
         if response and 'org' in response and isinstance(response['org'], list) and len(response['users']) > 0:
             return response['org']
@@ -219,7 +159,7 @@ class Client(object):
         """
         if module_name.lower() not in WRITE_MODULE_LIST:
             return None
-        url = BASE_URL + str(module_name)
+        url = self.BASE_URL + str(module_name)
         data = dict(data)
         for k, v in data.items():
             if v == 'False':
@@ -229,55 +169,3 @@ class Client(object):
         formatted_data = {'data': []}
         formatted_data['data'].append(data)
         return self._post(url, data=formatted_data)
-
-    def _get(self, endpoint, params=None):
-        headers = {'Authorization': 'Zoho-oauthtoken {0}'.format(self.access_token), }
-        response = requests.get(endpoint, params=params, headers=headers)
-        return self._parse(response, method='get')
-
-    def _post(self, endpoint, params=None, data=None):
-        headers = {'Authorization': 'Zoho-oauthtoken {0}'.format(self.access_token), }
-        response = requests.post(endpoint, params=params, json=data, headers=headers)
-        return self._parse(response, method='post')
-
-    def _put(self, endpoint, params=None, data=None):
-        headers = {'Authorization': 'Zoho-oauthtoken {0}'.format(self.access_token), }
-        response = requests.put(endpoint, params=params, json=data, headers=headers)
-        return self._parse(response, method='put')
-
-    def _patch(self, endpoint, params=None, data=None):
-        headers = {'Authorization': 'Zoho-oauthtoken {0}'.format(self.access_token), }
-        response = requests.patch(endpoint, params=params, json=data, headers=headers)
-        return self._parse(response, method='patch')
-
-    def _delete(self, endpoint, params=None):
-        headers = {'Authorization': 'Zoho-oauthtoken {0}'.format(self.access_token), }
-        response = requests.delete(endpoint, params=params, headers=headers)
-        return self._parse(response, method='delete')
-
-    def _parse(self, response, method=None):
-        status_code = response.status_code
-        if 'application/json' in response.headers['Content-Type']:
-            r = response.json()
-        else:
-            r = response.text
-        if status_code in (200, 201):
-            return r
-        if status_code == 204:
-            return None
-        message = None
-        try:
-            if 'message' in r:
-                message = r['message']
-        except Exception:
-            message = 'No error message.'
-        if status_code == 400:
-            raise InvalidModuleError(message)
-        if status_code == 401:
-            raise NoPermissionError(status_code)
-        if status_code == 201:
-            raise MandatoryFieldNotFoundError(message)
-        elif status_code == 202:
-            raise InvalidDataError(message)
-        elif status_code == 400:
-            raise InvalidDataError(message)

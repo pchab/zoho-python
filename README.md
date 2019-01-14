@@ -1,2 +1,2 @@
-# zohocrm-python
-ZohoCRM API wrapper written in python
+# zoho-python
+Zoho APIs wrapper written in python
