@@ -1,34 +1,44 @@
 # coding: utf8
-from urllib.parse import urlencode
 from zoho.common.client import Client as CommonClient
-
-
-READ_MODULE_LIST = {
-    'invoices': {},
-    'recurringinvoices': {},
-    'items': {}
-}
+import logging
 
 
 class Client(CommonClient):
     BASE_URL = 'https://books.zoho.com/api/v3/'
 
+    READ_MODULE_LIST = {
+        'invoices': {
+            'list_name': 'invoices'
+        },
+        'recurringinvoices': {
+            'list_name': 'recurring_invoices'
+        },
+        'items': {
+            'list_name': 'items'
+        }
+    }
+
+    @property
+    def available_read_modules(self):
+        return list(self.READ_MODULE_LIST)
+
     def get_records(self, module_name):
         """
 
-        :param module_name:
+        :param module_name: module from which to read record (api_name)
         :return:
         """
-        if module_name not in READ_MODULE_LIST:
+        if module_name not in self.READ_MODULE_LIST:
             return None
 
-        module_conf = READ_MODULE_LIST[module_name]
+        module_conf = self.READ_MODULE_LIST[module_name]
 
         url = self.BASE_URL + str(module_name)
         response = self._get(url)
-        all_data = [response[module_conf['list_name']]]
+        logging.error(response)
+        all_data = response[module_conf['list_name']]
         while response['page_context']['has_more_page']:
             page = response['page_context']['page']
             response = self._get(url, params={'page': int(page) + 1})
-            all_data.append(response[module_conf['list_name']])
+            all_data.extend(response[module_conf['list_name']])
         return all_data
