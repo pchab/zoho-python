@@ -1,22 +1,17 @@
 # coding: utf8
 from zoho.common.client import Client as CommonClient
-import logging
+from collections import OrderedDict
 
 
 class Client(CommonClient):
     BASE_URL = 'https://books.zoho.com/api/v3/'
 
-    READ_MODULE_LIST = {
-        'invoices': {
-            'list_name': 'invoices'
-        },
-        'recurringinvoices': {
-            'list_name': 'recurring_invoices'
-        },
-        'items': {
-            'list_name': 'items'
-        }
-    }
+    READ_MODULE_LIST = OrderedDict([
+        ('invoices', {'list_name': 'invoices'}),
+        ('recurringinvoices', {'list_name': 'recurring_invoices'}),
+        ('items', {'list_name': 'items'}),
+        ('creditnotes', {'list_name': 'creditnotes'})
+    ])
 
     @property
     def available_read_modules(self):
@@ -25,7 +20,7 @@ class Client(CommonClient):
     def get_records(self, module_name):
         """
 
-        :param module_name: module from which to read record (api_name)
+        :param module_name:
         :return:
         """
         if module_name not in self.READ_MODULE_LIST:
@@ -35,7 +30,6 @@ class Client(CommonClient):
 
         url = self.BASE_URL + str(module_name)
         response = self._get(url)
-        logging.error(response)
         all_data = response[module_conf['list_name']]
         while response['page_context']['has_more_page']:
             page = response['page_context']['page']
