@@ -10,7 +10,8 @@ class Client(CommonClient):
         ('invoices', {'list_name': 'invoices'}),
         ('recurringinvoices', {'list_name': 'recurring_invoices'}),
         ('items', {'list_name': 'items'}),
-        ('creditnotes', {'list_name': 'creditnotes'})
+        ('creditnotes', {'list_name': 'creditnotes'}),
+        ('organizations', {'list_name': 'organizations'})
     ])
 
     @property
