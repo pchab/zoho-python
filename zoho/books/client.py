@@ -44,3 +44,18 @@ class Client(CommonClient):
             response = self._get(url, params=dict({'page': int(page) + 1}, **base_params))
             all_data.extend(response[module_conf['list_name']])
         return all_data
+
+    def get_specific_record(self, module, id):
+        """
+        :return:
+        """
+        endpoint = '{0}/{1}'.format(module, id)
+        url = self.BASE_URL + str(endpoint)
+
+        params = {'organization_id': self._organization_id} if self._organization_id is not None else {}
+        
+        response = self._get(url, params=params)
+        if response and 'data' in response and len(response['data']) > 0 and response['data'][0]['id'] == id:
+            return response['data']
+        else:
+            return False
