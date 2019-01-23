@@ -58,4 +58,4 @@ class Client(CommonClient):
         if response and 'data' in response and len(response['data']) > 0 and response['data'][0]['id'] == id:
             return response['data']
         else:
-            return False
+            return response
