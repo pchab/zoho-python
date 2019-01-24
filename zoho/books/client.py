@@ -54,8 +54,4 @@ class Client(CommonClient):
 
         params = {'organization_id': self._organization_id} if self._organization_id is not None else {}
         
-        response = self._get(url, params=params)
-        if response and 'data' in response and len(response['data']) > 0 and response['data'][0]['id'] == id:
-            return response['data']
-        else:
-            return response
+        return self._get(url, params=params)
